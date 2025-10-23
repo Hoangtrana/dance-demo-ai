@@ -2,7 +2,11 @@ import streamlit as st
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from pose_utils import extract_keypoints_from_video, overlay_skeleton
+try:
+    from pose_utils import extract_keypoints_from_video, overlay_skeleton
+except Exception:
+    from pose_utils_mock import extract_keypoints_from_video, overlay_skeleton
+
 from compare_utils import compare_dances, frame_similarity
 from feedback_utils import generate_feedback
 

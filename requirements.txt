@@ -1,9 +1,6 @@
 streamlit==1.39.0
-mediapipe==0.10.8
 opencv-python-headless==4.9.0.80
 numpy==1.26.4
 scipy==1.13.0
 fastdtw==0.3.4
 matplotlib==3.9.0
-
-
