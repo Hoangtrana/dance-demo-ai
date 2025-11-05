@@ -58,7 +58,7 @@ def show_dance_gallery():
         with cols[i % 2]:
             img_src = load_thumbnail(t["thumb"])
             st.markdown(
-                f'<img src="{img_src}" style="width:100%;height:300px;object-fit:cover;border-radius:8px;">',
+                f'<img src="{img_src}" style="width:100%;height:350px;object-fit:cover;border-radius:8px;">',
                 unsafe_allow_html=True,
             )
             st.markdown(f"### {t['name']}")
