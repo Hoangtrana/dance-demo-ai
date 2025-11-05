@@ -2,100 +2,137 @@ import streamlit as st
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-try:
-    from pose_utils import extract_keypoints_from_video, overlay_skeleton
-except Exception:
-    from pose_utils_mock import extract_keypoints_from_video, overlay_skeleton
+import gdown
 
-from compare_utils import compare_dances, frame_similarity
-from feedback_utils import generate_feedback
+# Import các module nội bộ
+from tutorial_gallery import show_dance_gallery
+from pose_utils import extract_multi_person_keypoints, overlay_skeleton_with_scores
+from compare_utils_group_avg import compare_dance_group
+from ai_feedback_utils import generate_feedback
 
-st.set_page_config(page_title="Dance Pose Analyzer", layout="wide")
 
-st.title("💃 Ứng dụng chấm điểm & so sánh động tác múa")
-st.caption("Chọn bài múa chuẩn, tải video của bạn và xem so sánh trực quan 🇻🇳")
+# =============================
+# ⚙️ Streamlit Config
+# =============================
+st.set_page_config(page_title="Folk Dance Analyzer", layout="wide")
+st.title("💃 Folk Dance Analyzer – Ứng dụng học và chấm điểm múa dân gian Việt Nam")
+st.caption("Xem bài múa mẫu, luyện tập và nhận phản hồi thông minh 🇻🇳")
 
-# 1️⃣ Chọn bài múa chuẩn
-dance_options = {
-    "Múa xoè": "samples/xoè/standard.mp4",
-    "Múa quạt": "samples/quat/standard.mp4",
-    "Múa nón": "samples/non/standard.mp4"
+
+# =============================
+# 🎥 Google Drive Video Mẫu
+# =============================
+STANDARD_VIDEO_IDS = {
+    "Múa Xòe Tây Bắc": "1Zaj8tGnSgV1Ivtiuk-GImwYGIIu4lUdp",
+    "Múa Trống Cơm": "1K4hWlnZk9D_W2T3hQgMhZYcItpzdK8qW"
 }
 
-dance_choice = st.selectbox("🎭 Chọn bài múa:", list(dance_options.keys()))
-standard_path = dance_options[dance_choice]
 
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown("### 📹 Video mẫu")
-    if os.path.exists(standard_path):
-        st.video(standard_path)
-    else:
-        st.warning(f"⚠️ Thiếu video mẫu: {standard_path}")
+@st.cache_resource
+def download_drive_video(drive_id, save_path):
+    """Chỉ tải video 1 lần duy nhất."""
+    if os.path.exists(save_path):
+        return save_path
+    url = f"https://drive.google.com/uc?id={drive_id}"
+    gdown.download(url, save_path, quiet=False)
+    return save_path
 
-# 2️⃣ Upload video người học
-uploaded_file = st.file_uploader("📤 Tải video của bạn", type=["mp4", "mov"])
 
-user_path = None
-if uploaded_file:
-    save_dir = f"samples/user_uploads/{dance_choice.replace(' ', '_')}/"
-    os.makedirs(save_dir, exist_ok=True)
-    user_path = os.path.join(save_dir, uploaded_file.name)
-    with open(user_path, "wb") as f:
-        f.write(uploaded_file.read())
+# =============================
+# 📑 Tabs
+# =============================
+tab1, tab2 = st.tabs(["🏫 Học Múa", "🧍 Phân tích, So sánh & Chấm Điểm"])
+
+
+# =============================
+# TAB 1 – HỌC MÚA
+# =============================
+with tab1:
+    show_dance_gallery()
+
+
+# =============================
+# TAB 2 – SO SÁNH
+# =============================
+with tab2:
+    st.markdown("### 🎭 Chọn bài múa mẫu để so sánh")
+
+    dance_choice = st.selectbox("🎬 Bài múa:", list(STANDARD_VIDEO_IDS.keys()))
+    drive_id = STANDARD_VIDEO_IDS[dance_choice]
+
+    # Đường dẫn lưu cục bộ video mẫu
+    os.makedirs("samples/standard", exist_ok=True)
+    standard_path = f"samples/standard/{dance_choice.replace(' ', '_')}.mp4"
+
+    # ✅ Tải video mẫu 1 lần duy nhất
+    with st.spinner("⏳ Kiểm tra video mẫu..."):
+        try:
+            standard_path = download_drive_video(drive_id, standard_path)
+        except Exception as e:
+            standard_path = None
+            st.error(f"⚠️ Không tải được video mẫu: {e}")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("### 📹 Video mẫu")
+        if standard_path and os.path.exists(standard_path):
+            st.video(standard_path)
+        else:
+            st.warning("⚠️ Video mẫu chưa sẵn sàng.")
+
     with col2:
-        st.markdown("### 🎥 Video của bạn")
-        st.video(user_path)
+        uploaded_file = st.file_uploader("📤 Tải video của bạn", type=["mp4", "mov"])
 
-# 3️⃣ Khi có cả 2 video
-if user_path and os.path.exists(standard_path):
-    st.markdown("---")
-    st.subheader("🔍 So sánh chi tiết")
-
-    # Hiển thị song song video skeleton
-    st.markdown("### 🦴 Hiển thị khung xương (Pose Skeleton)")
-    colA, colB = st.columns(2)
-    with st.spinner("Đang xử lý skeleton..."):
-        standard_overlay = overlay_skeleton(standard_path, "temp_standard.mp4")
-        user_overlay = overlay_skeleton(user_path, "temp_user.mp4")
-
-    with colA:
-        st.markdown("**📺 Video mẫu (pose)**")
-        st.video(standard_overlay)
-    with colB:
-        st.markdown("**🧍 Video của bạn (pose)**")
-        st.video(user_overlay)
-
-    # Tính điểm theo thời gian
-    st.markdown("### 📈 Biểu đồ khớp động tác theo thời gian")
-
-    seq_standard = extract_keypoints_from_video(standard_path)
-    seq_user = extract_keypoints_from_video(user_path)
-    frame_scores = frame_similarity(seq_standard, seq_user)
-    avg_score = compare_dances(seq_standard, seq_user)
-
-    fig, ax = plt.subplots()
-    ax.plot(frame_scores, label="Điểm từng frame")
-    ax.set_ylim(0, 100)
-    ax.set_xlabel("Thời gian (frame)")
-    ax.set_ylabel("Điểm khớp (%)")
-    ax.set_title(f"Độ khớp động tác - {dance_choice}")
-    ax.legend()
-    st.pyplot(fig)
-
-    # Thanh trượt đồng bộ video
-    st.markdown("### 🎚️ Tua video đồng bộ")
-    total_frames = min(len(seq_standard), len(seq_user))
-    frame_idx = st.slider("Chọn vị trí (frame)", 0, total_frames - 1, 0)
-
-    st.info(f"📍 Đang xem frame thứ {frame_idx} – điểm: {frame_scores[frame_idx]:.1f}%")
-
-    st.success(f"🎯 Điểm trung bình toàn bài: **{avg_score}/100**")
-        # 🧠 GỢI Ý CẢI THIỆN CỤ THỂ
-    st.markdown("### 🧠 Gợi ý cải thiện động tác")
-
-    feedback_list = generate_feedback(seq_standard, seq_user)
-    for fb in feedback_list:
-        st.markdown(f"- {fb}")
+        user_path = None
+        if uploaded_file:
+            save_dir = f"samples/user_uploads/{dance_choice.replace(' ', '_')}/"
+            os.makedirs(save_dir, exist_ok=True)
+            user_path = os.path.join(save_dir, uploaded_file.name)
+            with open(user_path, "wb") as f:
+                f.write(uploaded_file.read())
+            st.success("✅ Video đã được tải lên!")
 
 
+    # =============================
+    # 🔍 Chạy phân tích nếu đủ dữ liệu
+    # =============================
+    if standard_path and user_path:
+        st.markdown("---")
+        st.subheader("🔍 Phân tích & So sánh chi tiết")
+
+        with st.spinner("🧮 Đang tính điểm tổng thể..."):
+            avg_score = compare_dance_group(standard_path, user_path)
+
+        st.success(f"🎯 Điểm trung bình toàn bài: **{avg_score:.1f}/100**")
+
+        st.markdown("### 🦴 Hiển thị khung xương (Pose Skeleton)")
+        colA, colB = st.columns(2)
+
+        with st.spinner("🎥 Đang xử lý video khung xương..."):
+            standard_overlay = overlay_skeleton_with_scores(standard_path, "temp_standard_pose.mp4", scores=[avg_score])
+            user_overlay = overlay_skeleton_with_scores(user_path, "temp_user_pose.mp4", scores=[avg_score])
+
+        with colA:
+            st.markdown("**📺 Video mẫu (Pose)**")
+            st.video(standard_overlay)
+
+        with colB:
+            st.markdown("**🧍 Video của bạn (Pose + Điểm)**")
+            st.video(user_overlay)
+
+        st.markdown("### 💬 Gợi ý cải thiện động tác")
+        with st.spinner("🧠 Đang tạo phản hồi..."):
+            seq_s = extract_multi_person_keypoints(standard_path)
+            seq_u = extract_multi_person_keypoints(user_path)
+
+            feedback_list = generate_feedback(
+                np.mean(seq_s[0], axis=0) if seq_s else np.zeros(99),
+                np.mean(seq_u[0], axis=0) if seq_u else np.zeros(99),
+                avg_score
+            )
+
+        for fb in feedback_list:
+            st.markdown(f"- {fb}")
+
+        st.info("💡 Ứng dụng đang chạy hoàn toàn **Offline** — không cần API & không tốn phí.")
