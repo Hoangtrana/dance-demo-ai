@@ -1,5 +1,8 @@
-streamlit==1.38.0
-opencv-python-headless==4.9.0.80
-numpy>=1.26.4,<2.3
-matplotlib>=3.8.0,<3.10
-gdown
+numpy==1.23.5
+opencv-python-headless==4.5.5.64
+ultralytics==8.1.0
+torch==2.2.1+cpu
+torchvision==0.17.1+cpu
+torchaudio==2.2.1+cpu
+python-dotenv
+streamlit
