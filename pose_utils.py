@@ -2,13 +2,23 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 
-# ================================
-# 🎯 CẤU HÌNH MODEL YOLOv8-Pose
-# ================================
-# model nhẹ, phù hợp demo hoặc CPU
+from ultralytics.nn.tasks import PoseModel
+from torch.serialization import add_safe_globals
 
+# ✅ Cho phép load model dạng ultralytics PoseModel
+add_safe_globals([PoseModel])
 
-YOLO_MODEL = YOLO("yolov8n-pose")
+# ✅ Tự tải model nếu chưa có
+MODEL_PATH = "yolov8n-pose.pt"
+if not os.path.exists(MODEL_PATH):
+    gdown.download(
+        "https://drive.google.com/uc?id=1U6_MPRphf2ntWjVbKH-yLpjcX2Ds2fzK",
+        MODEL_PATH,
+        quiet=False
+    )
+
+# ✅ Load model an toàn trên Streamlit Cloud (CPU)
+YOLO_MODEL = YOLO(MODEL_PATH, task="pose", verbose=False)
 
 
 
