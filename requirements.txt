@@ -5,3 +5,5 @@ ultralytics==8.1.0
 python-dotenv
 pandas
 gdown
+torch==2.1.0
+ultralytics==8.0.196
