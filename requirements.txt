@@ -6,3 +6,4 @@ torchvision==0.17.1+cpu
 torchaudio==2.2.1+cpu
 python-dotenv
 streamlit
+rich==13.9.4
