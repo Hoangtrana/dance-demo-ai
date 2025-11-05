@@ -10,13 +10,13 @@ tutorials = [
         "name": "Múa Xòe Tây Bắc",
         "desc": "Múa xòe là một loại hình nghệ thuật dân gian đặc sắc của đồng bào Thái ở vùng Tây Bắc Việt Nam.",
         "thumb": "samples/tutorials/xoe_thumb.jpg",
-        "drive_id": "3W2FO",
+        "drive_id": "1cc9nrqU0sdi7_27os-4z60UTbjN3W2FO",
     },
     {
         "name": "Học múa Xòe",
         "desc": "Bài múa dân gian Tây Bắc – nhịp 3/4, động tác nối vòng thể hiện tinh thần đoàn kết.",
         "thumb": "samples/tutorials/xoe_thumb_learn.jpg",
-        "drive_id": "1K4hWlnZk9D_W2T3hQgMhZYcItpzdK8qW",
+        "drive_id": "1Zaj8tGnSgV1Ivtiuk-GImwYGIIu4lUdp",
     },
     {
         "name": "Múa Trống Cơm",
