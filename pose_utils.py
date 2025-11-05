@@ -8,7 +8,7 @@ from ultralytics import YOLO
 # model nhẹ, phù hợp demo hoặc CPU
 
 
-YOLO_MODEL = YOLO("yolov8n-pose", task="pose")
+YOLO_MODEL = YOLO("yolov8n-pose")
 
 
 
