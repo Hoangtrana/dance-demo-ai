@@ -5,7 +5,7 @@ Triển khai bằng Streamlit.
 
 ## Chạy thử local
 
-source .venv/bin/activate
+source venv/bin/activate
 
 ```bash
 streamlit run app.py
