@@ -1,9 +1,14 @@
+# Core
 streamlit==1.38.0
-numpy==1.23.5
-opencv-python-headless==4.7.0.72
-ultralytics==8.1.0
-python-dotenv
+rich==13.7.0
+numpy
+opencv-python-headless
+matplotlib
 pandas
-gdown
+
+# Pose & YOLO
 torch==2.1.0
 ultralytics==8.0.196
+
+# Model downloader
+gdown
