@@ -6,7 +6,8 @@ from ultralytics import YOLO
 # 🎯 CẤU HÌNH MODEL YOLOv8-Pose
 # ================================
 # model nhẹ, phù hợp demo hoặc CPU
-YOLO_MODEL = YOLO("yolov8n-pose.pt")
+YOLO_MODEL = YOLO("yolov8n-pose.pt", task="pose")
+
 
 # ================================
 # 🧍‍♀️ Trích xuất keypoints nhiều người
