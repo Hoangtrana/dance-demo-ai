@@ -1,9 +1,6 @@
 streamlit==1.38.0
 numpy==1.23.5
-opencv-python-headless==4.5.5.64
+opencv-python-headless==4.7.0.72
 ultralytics==8.1.0
-torch==2.2.1+cpu
-torchvision==0.17.1+cpu
-torchaudio==2.2.1+cpu
 python-dotenv
-rich==13.9.4
+pandas
